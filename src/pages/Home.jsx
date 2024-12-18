@@ -1,10 +1,52 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import ProjectCard from '../components/ProjectCard'
 import { Card, CardBody, CardText } from 'react-bootstrap'
 import landingImg from '../assets/landingImg.png'
+import { homeProjectAPI } from '../services/allAPI'
 
 const Home = () => {
+  const navigate = useNavigate()
+  const [ homeProjects,setHomeProjects] = useState([])
+  const[isLogin,setIsLogin] = useState(false)
+
+console.log(homeProjects);
+
+  useEffect(()=>{
+    getHomeProjects()
+    if(sessionStorage.getItem("token")){
+      setIsLogin(true)
+    }else{
+      setIsLogin(false)
+    }
+  },[])
+
+  const getHomeProjects = async()=>{
+    try{
+      const result = await homeProjectAPI()
+      console.log(result);
+      if(result.status==200){
+        setHomeProjects(result.data)
+      }
+      
+    }catch(err){
+      console.log(err);
+      
+    }
+  }
+
+  const handleNavigateToProjects=()=>{
+    // user is logined?
+    if(sessionStorage.getItem("token")){
+      //authorised user then redirect 
+      navigate('/projects')
+    }
+    else{
+      //not authorised user the alert pleaselogin
+      alert("please login to get full access to our project collection")
+      
+    }
+  }
   return (
     <>
     {/* landing */}
@@ -14,7 +56,12 @@ const Home = () => {
         <div className="col-lg-6">
           <h1 style={{fontSize:'80px'}}><i className="fa-brands fa-docker"></i>Project Fair</h1>
           <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Corporis error sit laborum ipsa repellat incidunt similique! Accusamus, possimus reiciendis dolorum quos fuga id exercitationem facilis, optio necessitatibus molestiae consequuntur beatae.</p>
-          <Link to={'/login'} className='btn btn-warning'> START TO EXPLORE</Link>
+        { 
+        isLogin ?
+         <Link to={'/dashboard'} className='btn btn-warning'> MANAGE YOUR PROJECT</Link>
+         :
+         <Link to={'/login'} className='btn btn-warning'> START TO EXPLORE</Link>
+         }
         </div>
         <div className="col-lg-6">
           <img style={{width:'999px'}} className='img-fluild ' src={landingImg} alt="" />
@@ -27,12 +74,18 @@ const Home = () => {
       <h1 className="mb-5">Explore Our Projects</h1>
       <marquee >
      <div className="d-flex">
-      <div className="me-5">
-        <ProjectCard/>
+      {
+        homeProjects?.map(project=>(
+          <div className="me-5">
+        <ProjectCard displayData={project}/>
       </div>
+        )
+          
+        )
+      }
      </div>
       </marquee>
-      <button className="btn btn-link mt-5">CLICK HERE TO VIEW MORE PROJECTS...</button>
+      <button onClick={handleNavigateToProjects} className="btn btn-link mt-5">CLICK HERE TO VIEW MORE PROJECTS...</button>
     </div>
     {/* Our testimonial */}
     <div className="d-flex justify-content-center align-items-center my-5 flex-column">
